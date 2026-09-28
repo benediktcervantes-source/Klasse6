@@ -1,0 +1,67 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vollwinkel zerlegen · Klasse 6</title><style>
+:root{font:18px system-ui,-apple-system,sans-serif;color:#183449;background:#edf3f7}*{box-sizing:border-box}body{margin:0}main{max-width:1080px;margin:auto;padding:26px 18px}h1{font-size:clamp(28px,4vw,40px);margin:10px 0}h2{font-size:23px;margin-top:0}p{line-height:1.65}.eyebrow{font-size:14px;letter-spacing:2px;color:#236473;font-weight:750}.panel{background:#fff;border:1px solid #cbd9e2;border-radius:18px;padding:24px;margin:20px 0}.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.space{justify-content:space-between}button,input{font:inherit;min-height:50px;padding:10px 16px;border:1.5px solid #8aa2b4;border-radius:10px;background:white;color:inherit}button{cursor:pointer;touch-action:manipulation}button[aria-pressed=true],.primary{background:#12596a;color:#fff;border-color:#12596a}button:disabled,input:disabled{opacity:.6}button:focus-visible,input:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid #bd7600;outline-offset:3px}.muted{font-size:15px;color:#496174}.work{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,1fr);gap:25px;align-items:start}.picture{background:#eff6fb;border-radius:14px;overflow:hidden}.picture svg{display:block;width:100%;height:auto}.answer{display:flex;align-items:center;gap:10px;font-size:28px;margin:18px 0}.answer input{width:140px;min-width:0;font-size:26px;text-align:center}label{display:block;font-weight:700;margin-top:20px}.feedback{padding:17px;background:#edf3f7;border-radius:12px;line-height:1.65;margin:20px 0}.good{background:#e2f3e8;color:#185530}.bad{background:#fff0da;color:#704000}.hint{padding:18px;background:#fff5d8;border-radius:12px;line-height:1.7;margin-top:18px}.calc{font-size:23px;line-height:1.8}.tag{background:#e4f1fc;padding:12px 16px;border-radius:10px;font-weight:650;margin-bottom:14px}summary{font-weight:700;cursor:pointer;min-height:44px}footer{text-align:center;color:#496174;font-size:14px;padding:12px}a{color:#12596a}[hidden]{display:none!important}@media(max-width:760px){.work{grid-template-columns:1fr}.picture{max-width:480px;width:100%;margin:auto}main{padding:16px 10px}.panel{padding:17px}}
+.support-toggle{display:flex;align-items:center;gap:12px;cursor:pointer}.support-toggle input{width:25px;height:25px;min-height:25px;accent-color:#12596a}.supportbox{padding:18px;background:#edf6ed;border-radius:12px;margin:16px 0;line-height:1.7}.supportbox .calc{font-size:22px}.answer{flex-wrap:wrap}</style></head><body><main>
+<header><div class="eyebrow">MATHEMATIK · KLASSE 6</div><h1>Vollwinkel zerlegen</h1><p>Ein Kreis – gleich große Teile. Berechne die Größe des markierten Winkels.</p></header>
+<section class="panel"><div class="row space"><div class="row" id="modes"><button data-mode="one" aria-pressed="false">Ein Teil</button><button data-mode="many" aria-pressed="true">Mehrere Teile</button></div><span class="muted" id="score"></span></div><label class="support-toggle"><input id="support" type="checkbox">Schritt für Schritt</label><p class="muted">Einfachere Zahlen, feste Zeichnungen und Rechenhilfen.</p></section>
+<section class="panel"><p id="tasknum" class="muted"></p><div class="work"><div><div id="picture" class="picture"></div><p class="muted" id="caption"></p></div><div><h2 id="prompt"></h2><div class="tag" id="given"></div><p id="instruction"></p><div id="supportbox" class="supportbox" hidden></div><form id="form"><label for="answer">Dein Ergebnis</label><div class="answer"><span id="symbol"></span><input id="answer" type="text" inputmode="decimal" autocomplete="off" aria-label="Gesuchte Winkelgröße in Grad" placeholder="Ergebnis"><span>°</span></div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="row"><button id="check" class="primary">Prüfen</button><button id="next" type="button">Neue Aufgabe →</button><button id="hintbtn" type="button">Tipp anzeigen</button><button id="solve" type="button">Lösung zeigen</button></div></form><div id="hint" class="hint" hidden></div></div></div></section>
+<details class="panel"><summary>Merkwissen</summary><p>Ein Vollwinkel hat <strong>360°</strong>. Bei einer gleichmäßigen Zerlegung ist jeder Teil gleich groß.</p><p>Winkel eines Teils = 360° : Anzahl der Teile.</p><p>Für mehrere Teile multiplizierst du diesen Winkel mit der Anzahl der markierten Teile.</p><p>Beispiel: 8 gleiche Teile → 360° : 8 = 45°. Drei Teile ergeben 3 · 45° = 135°.</p></details><footer><a href="./winkel_ergaenzen.html">Weiter: Winkel ergänzen →</a><p>Offline nutzbar · keine Übertragung von Eingaben<br>Der Punktestand gilt für diese Sitzung.</p></footer></main><script>
+'use strict';const $=id=>document.getElementById(id),pick=a=>a[Math.floor(Math.random()*a.length)],rand=(a,b)=>a+Math.floor(Math.random()*(b-a+1));let support=false,phase=0,stepMistake=false;let task,count=0,total=0,correct=0,tries=0,done=false,assisted=false,previous='';
+
+const pt=(r,a)=>[240+r*Math.cos(a*Math.PI/180),240-r*Math.sin(a*Math.PI/180)];
+const xy=p=>p.map(v=>v.toFixed(3)).join(' ');
+function arc(r,start,angle){return 'M '+xy(pt(r,start))+' A '+r+' '+r+' 0 '+(angle>180?1:0)+' 0 '+xy(pt(r,start+angle));}
+function sector(r,start,angle,color){return '<path d="M 240 240 L '+xy(pt(r,start))+' A '+r+' '+r+' 0 '+(angle>180?1:0)+' 0 '+xy(pt(r,start+angle))+' Z" fill="'+color+'"/>';}
+function ray(a,color='#263e50',width=3){return '<path d="M 240 240 L '+xy(pt(180,a))+'" stroke="'+color+'" stroke-width="'+width+'" fill="none"/>';}
+function textAt(r,a,s,color){const p=pt(r,a);return '<text x="'+p[0]+'" y="'+p[1]+'" text-anchor="middle" dominant-baseline="central" font-family="system-ui,sans-serif" font-size="23" font-weight="700" fill="'+color+'" stroke="#fff" stroke-width="5" paint-order="stroke">'+s+'</text>';}
+function svgStart(desc){return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img" aria-label="'+desc+'"><title>'+desc+'</title>';}
+
+let mode='many';const target='α';
+function generate(m){if(support){const n=pick(m==='one'?[2,4,8,12]:[4,8,12]),k=m==='one'?1:rand(2,3);return {n,k,start:90,answer:k*360/n};}const n=pick([2,3,4,5,6,8,9,10,12,15,18,20,24]),k=m==='one'?1:rand(2,Math.max(2,n-1));if(k>=n)return generate(m);return {n,k,start:pick([0,30,60,90,120,150,180,210,240,270,300,330]),answer:k*360/n};}
+function drawing(t){const angle=t.k*360/t.n;let s=svgStart('Vollwinkel in '+t.n+' gleiche Teile zerlegt. '+t.k+' zusammenhängende Teile sind orange markiert.');
+s+=sector(180,t.start,angle,'#ffe2b8');s+='<circle cx="240" cy="240" r="180" fill="none" stroke="#8fa8ba" stroke-width="2"/>';
+for(let i=0;i<t.n;i++)s+=ray(t.start+i*360/t.n,'#849baa',1.6);
+s+=ray(t.start)+ray(t.start+angle);
+s+='<path d="'+arc(72,t.start,angle)+'" fill="none" stroke="#be4523" stroke-width="3.5"/>';
+s+=textAt(108,t.start+angle/2,'α','#a7391c');s+='<circle cx="240" cy="240" r="4" fill="#263e50"/></svg>';return s;}
+function next(first=false){if(first){task={n:12,k:2,start:90,answer:60};}else{do{task=generate(mode);}while(JSON.stringify(task)===previous);}previous=JSON.stringify(task);reset();phase=0;stepMistake=false;$('picture').innerHTML=drawing(task);$('prompt').textContent='Wie groß ist α?';$('given').textContent=task.n+' gleich große Teile · '+task.k+' '+(task.k===1?'Teil markiert':'Teile markiert');$('instruction').textContent='Der ganze Kreis entspricht 360°. Berechne den Winkel des orange markierten Bereichs.';$('caption').textContent='Die dünnen Linien zeigen die gleichmäßige Zerlegung. Der Bogen markiert den gesamten gesuchten Winkel.';$('symbol').textContent='α =';supportView();}
+function hint(){return '<strong>1. Ein Teil:</strong> Teile den Vollwinkel durch die Anzahl aller Teile: 360° : '+task.n+'.<br><strong>2. Markierter Winkel:</strong> '+(task.k===1?'Der gesuchte Winkel besteht aus genau einem Teil.':'Multipliziere die Größe eines Teils mit '+task.k+'.');}
+function solution(){const unit=360/task.n;return '<div class="calc">Ein Teil: 360° : '+task.n+' = '+unit+'°<br>α = '+task.k+' · '+unit+'° = <strong>'+task.answer+'°</strong></div>';}
+function wrong(n){if(task.k>1&&Math.abs(n-360/task.n)<1e-9)return 'Das ist die Größe eines einzelnen Teils. Der markierte Winkel umfasst '+task.k+' Teile.';return 'Teile zuerst 360° durch '+task.n+'. Berücksichtige danach alle '+task.k+' markierten Teile.';}
+
+function feedback(t,kind=''){$('feedback').textContent=t;$('feedback').className='feedback '+kind;}
+function stats(){$('score').hidden=support;$('score').textContent=correct+' von '+total+' im ersten Versuch ohne Tipp';}
+function parseNumber(s){s=s.trim().replace(/°$/,'').trim().replace(',','.');return /^\d+(?:\.\d+)?$/.test(s)?Number(s):NaN;}
+function reset(){done=false;tries=0;assisted=false;count++;$('tasknum').textContent='Aufgabe '+count;$('answer').value='';$('answer').removeAttribute('aria-invalid');['answer','check','solve'].forEach(id=>$(id).disabled=false);$('hint').hidden=true;$('hintbtn').textContent='Tipp anzeigen';feedback('Berechne den gesuchten Winkel. Du brauchst kein Geodreieck.');stats();}
+function finish(ok){done=true;total++;if(ok&&tries===1&&!assisted)correct++;['answer','check','solve'].forEach(id=>$(id).disabled=true);stats();}
+function check(){if(done)return;const n=parseNumber($('answer').value);if(!Number.isFinite(n)){feedback('Trage eine Winkelgröße als Zahl ein.','bad');return;}
+const want=support&&phase===0?360/task.n:task.answer;
+if(Math.abs(n-want)<1e-9){
+ if(support&&phase===0&&task.k>1){phase=1;$('answer').value='';$('answer').removeAttribute('aria-invalid');supportView();feedback('Richtig! Ein Teil hat '+want+'°. Jetzt berechnest du die markierten Teile zusammen.','good');return;}
+ tries=stepMistake?2:1;finish(true);$('answer').setAttribute('aria-invalid','false');feedback('Richtig! α = '+task.answer+'°.','good');
+}else{stepMistake=true;$('answer').setAttribute('aria-invalid','true');feedback(support&&phase===0?'Der ganze Kreis hat 360°. Teile 360 durch '+task.n+'. Nutze bei Bedarf die Rechenhilfe.':wrong(n),'bad');}}
+
+function supportView(){
+ $('supportbox').hidden=!support;if(!support)return;
+ const unit=360/task.n;
+ if(phase===0){$('prompt').textContent='Schritt 1: Wie groß ist ein Teil?';
+ $('instruction').textContent='Betrachte zuerst nur einen der gleich großen Teile.';$('symbol').textContent='360° : '+task.n+' =';
+ $('supportbox').innerHTML='<strong>Rechenhilfe</strong><div>2 gleiche Teile: ein Teil ist 180°.<br>4 gleiche Teile: ein Teil ist 90°.<br>8 gleiche Teile: ein Teil ist 45°.<br>12 gleiche Teile: ein Teil ist 30°.</div>';
+ }else{$('prompt').textContent='Schritt 2: Wie groß sind die markierten Teile zusammen?';
+ $('instruction').textContent='Ein Teil hat '+unit+'°. Addiere diesen Winkel '+task.k+'-mal.';
+ $('symbol').textContent='α =';
+ $('supportbox').innerHTML='<strong>Ein Teil: '+unit+'°</strong><div class="calc">'+Array(task.k).fill(unit+'°').join(' + ')+' = ?</div>';
+ }
+}
+
+$('support').onchange=()=>{
+ support=$('support').checked;
+ if(support)mode='one';
+ $('modes').querySelectorAll('button').forEach(b=>{b.hidden=support&&b.dataset.mode==='mixed';b.setAttribute('aria-pressed',String(b.dataset.mode===mode));});
+ next();
+};
+
+$('form').onsubmit=e=>{e.preventDefault();check();};$('next').onclick=()=>next();
+$('hintbtn').onclick=()=>{const open=$('hint').hidden;$('hint').hidden=!open;$('hintbtn').textContent=open?'Tipp ausblenden':'Tipp anzeigen';if(open){assisted=true;$('hint').innerHTML=hint();}};
+$('solve').onclick=()=>{if(done)return;assisted=true;finish(false);feedback('Lösungsweg');$('feedback').innerHTML+=solution();};
+$('modes').querySelectorAll('button').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;$('modes').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));next();});next(true);
+</script></body></html>
